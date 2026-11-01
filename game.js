@@ -102,17 +102,17 @@ function handleStart(e) {
   e.preventDefault();
   const pos = getPos(e);
 
-  // Common Next Button Check for Stage Transitions
-  const nextBtnWidth = 260;
-  const nextBtnHeight = 60;
+  // Tablet-adjusted Next Button region (raised height & padded hit area)
+  const nextBtnWidth = 280;
+  const nextBtnHeight = 65;
   const nextBtnX = (canvas.width - nextBtnWidth) / 2;
-  const nextBtnY = canvas.height - 110;
+  const nextBtnY = canvas.height - 140;
 
   const hitNextButton = (
-    pos.x >= nextBtnX &&
-    pos.x <= nextBtnX + nextBtnWidth &&
-    pos.y >= nextBtnY &&
-    pos.y <= nextBtnY + nextBtnHeight
+    pos.x >= nextBtnX - 15 &&
+    pos.x <= nextBtnX + nextBtnWidth + 15 &&
+    pos.y >= nextBtnY - 15 &&
+    pos.y <= nextBtnY + nextBtnHeight + 15
   );
 
   // STAGE 1: ROLL DOUGH
@@ -309,10 +309,10 @@ function draw() {
 
 function drawUI() {
   ctx.save();
-  const btnWidth = 260;
-  const btnHeight = 60;
+  const btnWidth = 280;
+  const btnHeight = 65;
   const btnX = (canvas.width - btnWidth) / 2;
-  const btnY = canvas.height - 110;
+  const btnY = canvas.height - 140;
 
   // --- STAGE 1: ROLL ---
   if (gameState.stage === 'roll') {
@@ -389,7 +389,11 @@ function drawUI() {
 }
 
 function drawNextButton(x, y, w, h, text) {
+  ctx.save();
   ctx.fillStyle = '#4CAF50';
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 4;
+  
   ctx.beginPath();
   if (ctx.roundRect) {
     ctx.roundRect(x, y, w, h, 30);
@@ -397,12 +401,14 @@ function drawNextButton(x, y, w, h, text) {
     ctx.rect(x, y, w, h);
   }
   ctx.fill();
+  ctx.stroke();
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 20px Arial';
+  ctx.font = 'bold 22px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, canvas.width / 2, y + h / 2);
+  ctx.restore();
 }
 
 function gameLoop() {
