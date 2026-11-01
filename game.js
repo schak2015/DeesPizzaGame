@@ -133,6 +133,23 @@ function getPos(e) {
   };
 }
 
+function applyRollProgress(pos, distance = 0) {
+  if (gameState.stage !== 'roll') return;
+
+  const amount = distance > 0 ? distance * 0.4 : 8;
+  gameState.rollProgress = Math.min(GAME_CONFIG.dough.rollTarget, gameState.rollProgress + amount);
+  const ratio = gameState.rollProgress / GAME_CONFIG.dough.rollTarget;
+  gameState.pizzaRadius = GAME_CONFIG.dough.minRadius + (GAME_CONFIG.dough.maxRadius - GAME_CONFIG.dough.minRadius) * ratio;
+  gameState.lastRollPos = pos;
+  playSound('roll');
+}
+
+function applySauceProgress() {
+  if (gameState.stage !== 'sauce') return;
+  gameState.sauceAmount = Math.min(GAME_CONFIG.sauce.targetAmount, gameState.sauceAmount + 8);
+  playSound('roll');
+}
+
 // ==========================================
 // INPUT HANDLERS
 // ==========================================
@@ -165,6 +182,7 @@ function handleStart(e) {
     if (distSq < (gameState.pizzaRadius + 50) ** 2) {
       gameState.isRolling = true;
       gameState.lastRollPos = pos;
+      applyRollProgress(pos, 8);
     }
   } 
 
@@ -179,6 +197,7 @@ function handleStart(e) {
     if (distSq < (gameState.pizzaRadius - 10) ** 2) {
       gameState.isRolling = true;
       gameState.lastRollPos = pos;
+      applySauceProgress();
     }
   } 
 
@@ -236,18 +255,13 @@ function handleMove(e) {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist > 5) {
-        gameState.rollProgress = Math.min(GAME_CONFIG.dough.rollTarget, gameState.rollProgress + dist * 0.4);
-        const ratio = gameState.rollProgress / GAME_CONFIG.dough.rollTarget;
-        gameState.pizzaRadius = GAME_CONFIG.dough.minRadius + (GAME_CONFIG.dough.maxRadius - GAME_CONFIG.dough.minRadius) * ratio;
-        gameState.lastRollPos = pos;
-        playSound('roll');
+        applyRollProgress(pos, dist);
       }
     }
   } else if (gameState.stage === 'sauce') {
     const distSq = (pos.x - gameState.pizzaPos.x) ** 2 + (pos.y - gameState.pizzaPos.y) ** 2;
     if (distSq < (gameState.pizzaRadius - 10) ** 2) {
-      gameState.sauceAmount = Math.min(GAME_CONFIG.sauce.targetAmount, gameState.sauceAmount + 1);
-      playSound('roll');
+      applySauceProgress();
     }
   }
 }
