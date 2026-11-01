@@ -31,8 +31,77 @@ const GAME_CONFIG = {
 // ==========================================
 // GAME STATE
 // ==========================================
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById('pizzaCanvas') || document.getElementById('gameCanvas');
+const ctx = canvas ? canvas.getContext('2d') : null;
+
+let audioContext = null;
+
+function getAudioContext() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return null;
+
+  if (!audioContext) {
+    audioContext = new AudioContext();
+  }
+
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+
+  return audioContext;
+}
+
+// Web Audio API helper for sound effects
+function playSound(type) {
+  try {
+    const audioCtx = getAudioContext();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === 'roll') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'click') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } else if (type === 'done') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.15);
+      osc.frequency.setValueAtTime(783.99, now + 0.3);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.5);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    } else if (type === 'pop') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(700, now);
+      osc.frequency.exponentialRampToValueAtTime(1100, now + 0.08);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    }
+  } catch (e) {
+    // Audio is optional; ignore failures for older or restricted browsers.
+  }
+}
 
 let gameState = {
   stage: 'roll', // 'roll' | 'sauce' | 'toppings' | 'bake' | 'done'
@@ -48,45 +117,9 @@ let gameState = {
   bakeProgress: 0
 };
 
-// Web Audio API helper for sound effects
-function playSound(type) {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-
-    const now = this.audioCtx.currentTime;
-
-    if (type === 'roll') {
-      osc.frequency.setValueAtTime(150, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } else if (type === 'click') {
-      osc.frequency.setValueAtTime(400, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.15);
-    } else if (type === 'done') {
-      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.15); // E5
-      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.3); // G5
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.5);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.5);
-    }
-  } catch (e) {
-    // Audio context fallback
-  }
+if (canvas) {
+  canvas.width = GAME_CONFIG.canvas.width;
+  canvas.height = GAME_CONFIG.canvas.height;
 }
 
 // Convert touch/mouse events into relative canvas coordinates
@@ -145,6 +178,7 @@ function handleStart(e) {
     const distSq = (pos.x - gameState.pizzaPos.x) ** 2 + (pos.y - gameState.pizzaPos.y) ** 2;
     if (distSq < (gameState.pizzaRadius - 10) ** 2) {
       gameState.isRolling = true;
+      gameState.lastRollPos = pos;
     }
   } 
 
@@ -176,7 +210,7 @@ function handleStart(e) {
         y: pos.y,
         item: gameState.selectedTopping
       });
-      this.playSound('pop');
+      playSound('pop');
     }
   } 
 
@@ -241,13 +275,33 @@ function resetGame() {
 }
 
 // Attach Event Listeners
-canvas.addEventListener('mousedown', handleStart);
-canvas.addEventListener('mousemove', handleMove);
-canvas.addEventListener('mouseup', handleEnd);
+if (canvas) {
+  canvas.addEventListener('mousedown', handleStart);
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseup', handleEnd);
 
-canvas.addEventListener('touchstart', handleStart, { passive: false });
-canvas.addEventListener('touchmove', handleMove, { passive: false });
-canvas.addEventListener('touchend', handleEnd, { passive: false });
+  canvas.addEventListener('touchstart', handleStart, { passive: false });
+  canvas.addEventListener('touchmove', handleMove, { passive: false });
+  canvas.addEventListener('touchend', handleEnd, { passive: false });
+}
+
+function drawNextButton(x, y, width, height, label) {
+  ctx.save();
+  ctx.fillStyle = '#F97316';
+  ctx.strokeStyle = '#C2410C';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect(x, y, width, height, 18);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = 'bold 22px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#FFF';
+  ctx.fillText(label, x + width / 2, y + height / 2 + 2);
+  ctx.restore();
+}
 
 // ==========================================
 // RENDER LOOP
@@ -264,6 +318,8 @@ function update() {
 }
 
 function draw() {
+  if (!ctx) return;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // 1. Draw Table Background
@@ -313,6 +369,8 @@ function draw() {
 }
 
 function drawUI() {
+  if (!ctx) return;
+
   ctx.save();
   const btnWidth = 260;
   const btnHeight = 60;
@@ -398,30 +456,12 @@ function drawUI() {
   ctx.restore();
 }
 
-function drawNextButton(x, y, w, h, text) {
-  ctx.fillStyle = '#4CAF50';
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x, y, w, h, 30);
-  } else {
-    ctx.rect(x, y, w, h);
-  }
-  ctx.fill();
-
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 20px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, canvas.width / 2, y + h / 2);
-}
-
-function gameLoop() {
+function loop() {
   update();
   draw();
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(loop);
 }
 
-// Initialize game on window load
-window.addEventListener('load', () => {
-  window.pizzaGame = new PizzaGame();
-});
+if (canvas) {
+  requestAnimationFrame(loop);
+}
