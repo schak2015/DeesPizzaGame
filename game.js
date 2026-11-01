@@ -29,16 +29,31 @@ const GAME_CONFIG = {
 };
 
 // ==========================================
+// DOM BINDINGS
+// ==========================================
+const canvas = document.getElementById('pizzaCanvas');
+const ctx = canvas ? canvas.getContext('2d') : null;
+const resetButton = document.getElementById('reset-btn');
+const instructionBadge = document.getElementById('instruction-badge');
+
+if (!canvas) {
+  console.error('Missing canvas: expected #pizzaCanvas in index.html');
+}
+if (!resetButton) {
+  console.error('Missing reset button: expected #reset-btn in index.html');
+}
+if (!instructionBadge) {
+  console.error('Missing instruction badge: expected #instruction-badge in index.html');
+}
+
+// ==========================================
 // GAME STATE
 // ==========================================
-const canvas = document.getElementById('pizzaCanvas') || document.getElementById('gameCanvas');
-const ctx = canvas ? canvas.getContext('2d') : null;
-
 let audioContext = null;
 
 function getAudioContext() {
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContext) return null;
+  const Audiocontext = window.AudioContext || window.webkitAudioContext;
+  if (!Audiocontext) return null;
 
   if (!audioContext) {
     audioContext = new AudioContext();
@@ -272,6 +287,21 @@ function handleEnd(e) {
   gameState.lastRollPos = null;
 }
 
+function updateInstructionBadge() {
+  if (!instructionBadge) return;
+
+  const textByStage = {
+    roll: 'Tap to Roll Dough! 🪵',
+    sauce: 'Rub to Spread Sauce! 🍅',
+    toppings: 'Pick a Topping! 🧀',
+    bake: 'Pizza is Baking! 🔥',
+    done: 'Yummy! Pizza is Ready! 🍕'
+  };
+
+  instructionBadge.textContent = textByStage[gameState.stage] || textByStage.roll;
+  instructionBadge.style.display = gameState.stage === 'bake' ? 'none' : 'block';
+}
+
 function resetGame() {
   gameState = {
     stage: 'roll',
@@ -286,6 +316,7 @@ function resetGame() {
     bakeStartTime: null,
     bakeProgress: 0
   };
+  updateInstructionBadge();
 }
 
 // Attach Event Listeners
@@ -298,6 +329,15 @@ if (canvas) {
   canvas.addEventListener('touchmove', handleMove, { passive: false });
   canvas.addEventListener('touchend', handleEnd, { passive: false });
 }
+
+if (resetButton) {
+  resetButton.addEventListener('click', () => {
+    playSound('click');
+    resetGame();
+  });
+}
+
+updateInstructionBadge();
 
 function drawNextButton(x, y, width, height, label) {
   ctx.save();
