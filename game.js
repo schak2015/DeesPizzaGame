@@ -1,6 +1,9 @@
-// ==========================================
-// GAME CONFIGURATION (Modular Specs)
-// ==========================================
+/**
+ * ------------------------------------------------------------------
+ * GAME CONFIGURATION & SPECS
+ * Easily modify options, colors, sizes, and toppings here!
+ * ------------------------------------------------------------------
+ */
 const GAME_CONFIG = {
   canvas: { width: 400, height: 600 },
   dough: {
@@ -10,17 +13,15 @@ const GAME_CONFIG = {
     color: '#F4C430',
     crustColor: '#D2B48C'
   },
-  sauces: [
-    { id: 'tomato', name: 'Tomato', color: '#D32F2F', emoji: '🍅' },
-    { id: 'pesto', name: 'Pesto', color: '#388E3C', emoji: '🌿' },
-    { id: 'bbq', name: 'BBQ', color: '#5D4037', emoji: '🍖' }
-  ],
+  sauce: {
+    color: '#D32F2F',
+    targetAmount: 80
+  },
   toppings: [
     { id: 'cheese', name: 'Cheese', emoji: '🧀', color: '#FFD700' },
     { id: 'pepperoni', name: 'Pepperoni', emoji: '🍕', color: '#B71C1C' },
     { id: 'mushroom', name: 'Mushroom', emoji: '🍄', color: '#8D6E63' },
-    { id: 'broccoli', name: 'Broccoli', emoji: '🥦', color: '#2E7D32' },
-    { id: 'olive', name: 'Olive', emoji: '🫒', color: '#212121' }
+    { id: 'broccoli', name: 'Broccoli', emoji: '🥦', color: '#2E7D32' }
   ],
   oven: {
     bakeTimeMs: 4000
@@ -35,13 +36,12 @@ const ctx = canvas.getContext('2d');
 
 let gameState = {
   stage: 'roll', // 'roll' | 'sauce' | 'toppings' | 'bake' | 'done'
-  pizzaPos: { x: 200, y: 310 },
+  pizzaPos: { x: 200, y: 300 },
   pizzaRadius: GAME_CONFIG.dough.minRadius,
   rollProgress: 0,
   isRolling: false,
   lastRollPos: null,
   sauceAmount: 0,
-  selectedSauce: GAME_CONFIG.sauces[0],
   selectedTopping: GAME_CONFIG.toppings[0],
   placedToppings: [],
   bakeStartTime: null,
@@ -57,7 +57,9 @@ function playSound(type) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(this.audioCtx.destination);
+
+    const now = this.audioCtx.currentTime;
 
     if (type === 'roll') {
       osc.frequency.setValueAtTime(150, ctx.currentTime);
@@ -74,20 +76,20 @@ function playSound(type) {
       osc.start();
       osc.stop(ctx.currentTime + 0.15);
     } else if (type === 'done') {
-      osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.15);
-      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.3);
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.15); // E5
+      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.3); // G5
       gain.gain.setValueAtTime(0.2, ctx.currentTime);
       gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.5);
       osc.start();
       osc.stop(ctx.currentTime + 0.5);
     }
   } catch (e) {
-    // Audio fallback
+    // Audio context fallback
   }
 }
 
-// Map touch/mouse events cleanly to internal canvas coordinates regardless of viewport aspect ratio
+// Convert touch/mouse events into relative canvas coordinates
 function getPos(e) {
   const rect = canvas.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -105,17 +107,17 @@ function handleStart(e) {
   e.preventDefault();
   const pos = getPos(e);
 
-  // Position next button safely inside visible canvas bounds (canvas.height - 120)
-  const nextBtnWidth = 280;
+  // Common Next Button Check for Stage Transitions
+  const nextBtnWidth = 260;
   const nextBtnHeight = 60;
   const nextBtnX = (canvas.width - nextBtnWidth) / 2;
-  const nextBtnY = canvas.height - 120;
+  const nextBtnY = canvas.height - 110;
 
   const hitNextButton = (
-    pos.x >= nextBtnX - 15 &&
-    pos.x <= nextBtnX + nextBtnWidth + 15 &&
-    pos.y >= nextBtnY - 15 &&
-    pos.y <= nextBtnY + nextBtnHeight + 15
+    pos.x >= nextBtnX &&
+    pos.x <= nextBtnX + nextBtnWidth &&
+    pos.y >= nextBtnY &&
+    pos.y <= nextBtnY + nextBtnHeight
   );
 
   // STAGE 1: ROLL DOUGH
@@ -135,23 +137,11 @@ function handleStart(e) {
 
   // STAGE 2: ADD SAUCE
   else if (gameState.stage === 'sauce') {
-    // Sauce selection bar at top
-    if (pos.y < 80) {
-      const sauceWidth = canvas.width / GAME_CONFIG.sauces.length;
-      const index = Math.floor(pos.x / sauceWidth);
-      if (GAME_CONFIG.sauces[index]) {
-        gameState.selectedSauce = GAME_CONFIG.sauces[index];
-        playSound('click');
-      }
-      return;
-    }
-
     if (hitNextButton && gameState.sauceAmount >= GAME_CONFIG.sauce.targetAmount) {
       playSound('click');
       gameState.stage = 'toppings';
       return;
     }
-
     const distSq = (pos.x - gameState.pizzaPos.x) ** 2 + (pos.y - gameState.pizzaPos.y) ** 2;
     if (distSq < (gameState.pizzaRadius - 10) ** 2) {
       gameState.isRolling = true;
@@ -167,8 +157,8 @@ function handleStart(e) {
       return;
     }
 
-    // Topping selection bar at top
-    if (pos.y < 85) {
+    // Check topping selector bar at top
+    if (pos.y < 90) {
       const toppingWidth = canvas.width / GAME_CONFIG.toppings.length;
       const index = Math.floor(pos.x / toppingWidth);
       if (GAME_CONFIG.toppings[index]) {
@@ -178,7 +168,7 @@ function handleStart(e) {
       return;
     }
 
-    // Place topping on pizza surface
+    // Place topping on pizza
     const distSq = (pos.x - gameState.pizzaPos.x) ** 2 + (pos.y - gameState.pizzaPos.y) ** 2;
     if (distSq < (gameState.pizzaRadius - 15) ** 2) {
       gameState.placedToppings.push({
@@ -186,7 +176,7 @@ function handleStart(e) {
         y: pos.y,
         item: gameState.selectedTopping
       });
-      playSound('click');
+      this.playSound('pop');
     }
   } 
 
@@ -237,13 +227,12 @@ function handleEnd(e) {
 function resetGame() {
   gameState = {
     stage: 'roll',
-    pizzaPos: { x: 200, y: 310 },
+    pizzaPos: { x: 200, y: 300 },
     pizzaRadius: GAME_CONFIG.dough.minRadius,
     rollProgress: 0,
     isRolling: false,
     lastRollPos: null,
     sauceAmount: 0,
-    selectedSauce: GAME_CONFIG.sauces[0],
     selectedTopping: GAME_CONFIG.toppings[0],
     placedToppings: [],
     bakeStartTime: null,
@@ -251,7 +240,7 @@ function resetGame() {
   };
 }
 
-// Event Listeners
+// Attach Event Listeners
 canvas.addEventListener('mousedown', handleStart);
 canvas.addEventListener('mousemove', handleMove);
 canvas.addEventListener('mouseup', handleEnd);
@@ -277,8 +266,8 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 1. Draw Background Palette (Beige / Warm Wood Kitchen Table)
-  ctx.fillStyle = gameState.stage === 'bake' ? '#3e2723' : '#FDF5E6';
+  // 1. Draw Table Background
+  ctx.fillStyle = gameState.stage === 'bake' ? '#3e2723' : '#87CEEB';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // 2. Draw Pizza Base (Crust)
@@ -294,12 +283,12 @@ function draw() {
   ctx.fillStyle = GAME_CONFIG.dough.color;
   ctx.fill();
 
-  // 4. Draw Selected Sauce
+  // 4. Draw Sauce
   if (gameState.sauceAmount > 0) {
     const sauceRadius = (gameState.pizzaRadius - 12) * (gameState.sauceAmount / GAME_CONFIG.sauce.targetAmount);
     ctx.beginPath();
     ctx.arc(gameState.pizzaPos.x, gameState.pizzaPos.y, sauceRadius, 0, Math.PI * 2);
-    ctx.fillStyle = gameState.selectedSauce.color;
+    ctx.fillStyle = GAME_CONFIG.sauce.color;
     ctx.fill();
   }
 
@@ -311,7 +300,7 @@ function draw() {
     ctx.fillText(t.item.emoji, t.x, t.y);
   });
 
-  // 6. Draw Oven Bake Glow Effect
+  // 6. Draw Oven Bake Effect Overlay
   if (gameState.stage === 'bake') {
     ctx.fillStyle = `rgba(255, 100, 0, ${0.4 * (1 - gameState.bakeProgress)})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -319,20 +308,20 @@ function draw() {
 
   ctx.restore();
 
-  // 7. Draw Stage UI & Controls
+  // 7. Draw Stage UI & Next Buttons
   drawUI();
 }
 
 function drawUI() {
   ctx.save();
-  const btnWidth = 280;
+  const btnWidth = 260;
   const btnHeight = 60;
   const btnX = (canvas.width - btnWidth) / 2;
-  const btnY = canvas.height - 120;
+  const btnY = canvas.height - 110;
 
   // --- STAGE 1: ROLL ---
   if (gameState.stage === 'roll') {
-    ctx.fillStyle = '#4A3B32';
+    ctx.fillStyle = '#333';
     ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('Rub dough to roll it!', canvas.width / 2, 45);
@@ -344,25 +333,10 @@ function drawUI() {
 
   // --- STAGE 2: SAUCE ---
   else if (gameState.stage === 'sauce') {
-    // Menu Selector Bar for Sauce Types
-    const sauceWidth = canvas.width / GAME_CONFIG.sauces.length;
-    GAME_CONFIG.sauces.forEach((s, i) => {
-      const x = i * sauceWidth;
-      ctx.fillStyle = (gameState.selectedSauce.id === s.id) ? '#FFF' : '#EFEBE9';
-      ctx.fillRect(x + 2, 10, sauceWidth - 4, 45);
-      ctx.strokeStyle = '#BCAAA4';
-      ctx.strokeRect(x + 2, 10, sauceWidth - 4, 45);
-
-      ctx.font = '18px Arial';
-      ctx.fillStyle = '#333';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${s.emoji} ${s.name}`, x + sauceWidth / 2, 38);
-    });
-
-    ctx.fillStyle = '#4A3B32';
-    ctx.font = 'bold 18px Arial';
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('Pick sauce top, rub pizza!', canvas.width / 2, 75);
+    ctx.fillText('Rub to spread red sauce!', canvas.width / 2, 45);
 
     if (gameState.sauceAmount >= GAME_CONFIG.sauce.targetAmount) {
       drawNextButton(btnX, btnY, btnWidth, btnHeight, 'Tasty Sauce! Tap Next ➡️');
@@ -371,18 +345,22 @@ function drawUI() {
 
   // --- STAGE 3: TOPPINGS ---
   else if (gameState.stage === 'toppings') {
-    // Menu Selector Bar for Toppings
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Pick topping top, tap pizza!', canvas.width / 2, 25);
+
+    // Render topping selector tabs
     const toppingWidth = canvas.width / GAME_CONFIG.toppings.length;
     GAME_CONFIG.toppings.forEach((t, i) => {
       const x = i * toppingWidth;
-      ctx.fillStyle = (gameState.selectedTopping.id === t.id) ? '#FFF' : '#EFEBE9';
-      ctx.fillRect(x + 2, 10, toppingWidth - 4, 45);
-      ctx.strokeStyle = '#BCAAA4';
-      ctx.strokeRect(x + 2, 10, toppingWidth - 4, 45);
+      ctx.fillStyle = (gameState.selectedTopping.id === t.id) ? '#FFF' : '#E0E0E0';
+      ctx.fillRect(x + 2, 35, toppingWidth - 4, 45);
+      ctx.strokeStyle = '#999';
+      ctx.strokeRect(x + 2, 35, toppingWidth - 4, 45);
 
-      ctx.font = '22px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText(t.emoji, x + toppingWidth / 2, 40);
+      ctx.font = '24px Arial';
+      ctx.fillText(t.emoji, x + toppingWidth / 2, 65);
     });
 
     ctx.fillStyle = '#4A3B32';
@@ -396,21 +374,21 @@ function drawUI() {
   // --- STAGE 4: BAKE ---
   else if (gameState.stage === 'bake') {
     ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 24px Arial';
+    ctx.font = 'bold 26px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('Baking in the Oven... 🔥', canvas.width / 2, 50);
 
     // Progress Bar
     ctx.fillStyle = '#555';
-    ctx.fillRect(50, canvas.height - 90, 300, 24);
+    ctx.fillRect(50, canvas.height - 80, 300, 24);
     ctx.fillStyle = '#FF9800';
-    ctx.fillRect(50, canvas.height - 90, 300 * gameState.bakeProgress, 24);
+    ctx.fillRect(50, canvas.height - 80, 300 * gameState.bakeProgress, 24);
   }
 
   // --- STAGE 5: DONE ---
   else if (gameState.stage === 'done') {
     ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 26px Arial';
+    ctx.font = 'bold 28px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('YUMMY! Pizza is Ready! 🍕', canvas.width / 2, 50);
 
@@ -421,11 +399,7 @@ function drawUI() {
 }
 
 function drawNextButton(x, y, w, h, text) {
-  ctx.save();
   ctx.fillStyle = '#4CAF50';
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 4;
-  
   ctx.beginPath();
   if (ctx.roundRect) {
     ctx.roundRect(x, y, w, h, 30);
@@ -433,14 +407,12 @@ function drawNextButton(x, y, w, h, text) {
     ctx.rect(x, y, w, h);
   }
   ctx.fill();
-  ctx.stroke();
 
   ctx.fillStyle = '#FFFFFF';
   ctx.font = 'bold 20px Arial';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, canvas.width / 2, y + h / 2);
-  ctx.restore();
 }
 
 function gameLoop() {
@@ -449,5 +421,7 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// Start Game Loop
-gameLoop();
+// Initialize game on window load
+window.addEventListener('load', () => {
+  window.pizzaGame = new PizzaGame();
+});
