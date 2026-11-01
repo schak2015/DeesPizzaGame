@@ -55,6 +55,10 @@ class PizzaGame {
 
     this.canvas.width = GAME_CONFIG.canvas.baseWidth;
     this.canvas.height = GAME_CONFIG.canvas.baseHeight;
+    this.canvas.style.width = 'min(88vw, 520px)';
+    this.canvas.style.height = 'min(88vw, 520px)';
+    this.canvas.style.maxWidth = '520px';
+    this.canvas.style.maxHeight = '520px';
 
     this.currentStageIndex = 0;
     this.selectedDough = GAME_CONFIG.doughTypes[0];
@@ -279,6 +283,7 @@ class PizzaGame {
           index === this.currentStageIndex ? 'bg-orange-500 text-white shadow-md' : 'bg-gray-100 text-gray-500'
         }`;
         badge.innerHTML = `<span>${stage.emoji}</span> <span class="hidden md:inline">${stage.label}</span>`;
+        badge.style.minWidth = index === this.currentStageIndex ? '74px' : '42px';
         this.stageIndicatorEl.appendChild(badge);
       });
     }
@@ -287,6 +292,9 @@ class PizzaGame {
 
     if (this.controlsPanelEl) {
       this.controlsPanelEl.innerHTML = '';
+      this.controlsPanelEl.style.gap = '0.6rem';
+      this.controlsPanelEl.style.justifyContent = 'center';
+      this.controlsPanelEl.style.alignItems = 'center';
 
       if (currentStage === 'dough') {
         if (this.instructionBadgeEl) {
@@ -297,6 +305,7 @@ class PizzaGame {
         GAME_CONFIG.doughTypes.forEach((dough) => {
           const btn = document.createElement('button');
           btn.className = `topping-btn px-4 py-2 bg-orange-100 hover:bg-orange-200 rounded-2xl border-2 border-orange-300 text-orange-900 font-bold flex items-center gap-2 ${this.selectedDough.id === dough.id ? 'ring-4 ring-orange-400' : ''}`;
+          btn.style.minHeight = '54px';
           btn.innerHTML = `🫓 ${dough.name}`;
           btn.onclick = () => {
             this.selectedDough = dough;
@@ -315,6 +324,7 @@ class PizzaGame {
         GAME_CONFIG.sauces.forEach((sauce) => {
           const btn = document.createElement('button');
           btn.className = `topping-btn px-4 py-2 bg-red-100 hover:bg-red-200 rounded-2xl border-2 border-red-300 text-red-900 font-bold flex items-center gap-2 ${this.selectedSauce.id === sauce.id ? 'ring-4 ring-red-400' : ''}`;
+          btn.style.minHeight = '54px';
           btn.innerHTML = `🥫 ${sauce.name}`;
           btn.onclick = () => {
             this.selectedSauce = sauce;
@@ -332,6 +342,7 @@ class PizzaGame {
 
         const cheeseBtn = document.createElement('div');
         cheeseBtn.className = 'text-center font-bold text-yellow-600 text-lg';
+        cheeseBtn.style.padding = '0.8rem 1rem';
         cheeseBtn.innerHTML = '✨ Rub over pizza to sprinkle yummy cheese!';
         this.controlsPanelEl.appendChild(cheeseBtn);
         this.appendNextButton();
@@ -344,6 +355,7 @@ class PizzaGame {
         GAME_CONFIG.toppings.forEach((topping) => {
           const btn = document.createElement('button');
           btn.className = `topping-btn px-3 py-2 bg-yellow-50 hover:bg-yellow-100 rounded-2xl border-2 border-yellow-300 text-yellow-900 font-bold flex items-center gap-1 ${this.selectedTopping.id === topping.id ? 'ring-4 ring-yellow-400 scale-105' : ''}`;
+          btn.style.minHeight = '54px';
           btn.innerHTML = `<span class="text-2xl">${topping.emoji}</span> <span>${topping.name}</span>`;
           btn.onclick = () => {
             this.selectedTopping = topping;
@@ -366,6 +378,7 @@ class PizzaGame {
 
         const eatBanner = document.createElement('div');
         eatBanner.className = 'text-center font-bold text-green-600 text-xl animate-bounce';
+        eatBanner.style.padding = '0.8rem 1rem';
         eatBanner.innerHTML = '🎉 Delicious Pizza! Take bites!';
         this.controlsPanelEl.appendChild(eatBanner);
       }
@@ -375,6 +388,7 @@ class PizzaGame {
   appendNextButton() {
     const nextBtn = document.createElement('button');
     nextBtn.className = 'ml-auto bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transform active:scale-95 text-lg flex items-center gap-2';
+    nextBtn.style.minHeight = '54px';
     nextBtn.innerHTML = '<span>Next</span> ➡️';
     nextBtn.onclick = () => {
       this.playSound('pop');

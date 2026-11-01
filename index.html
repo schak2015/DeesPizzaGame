@@ -29,6 +29,22 @@
     .topping-btn:active {
       transform: scale(0.9);
     }
+    #pizzaCanvas {
+      display: block;
+      width: min(88vw, 520px);
+      height: min(88vw, 520px);
+      max-width: 520px;
+      max-height: 520px;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.08);
+    }
+    #controls-panel {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    #instruction-badge {
+      z-index: 20;
+    }
   </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col justify-between items-center p-2 md:p-4 select-none">
