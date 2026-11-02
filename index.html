@@ -38,9 +38,22 @@
       border-radius: 1.5rem;
       box-shadow: 0 20px 30px rgba(0, 0, 0, 0.08);
     }
+    .pizza-shell {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border: 4px solid #60a5fa;
+      border-radius: 2rem;
+      padding: 1rem;
+      box-shadow: inset 0 0 0 4px rgba(255,255,255,0.3), 0 18px 25px rgba(96, 165, 250, 0.2);
+    }
     #controls-panel {
-      flex-wrap: wrap;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: stretch;
       justify-content: center;
+      overflow-y: auto;
+      width: 100%;
+      height: 100%;
     }
     #instruction-badge {
       z-index: 20;
@@ -50,33 +63,36 @@
 <body class="h-screen w-screen overflow-hidden flex flex-col justify-between items-center p-2 md:p-4 select-none">
 
   <!-- Header Banner -->
-  <header class="w-full max-w-4xl flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl p-3 shadow-lg border-2 border-orange-200 z-10">
+  <header class="w-full max-w-6xl flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl p-3 shadow-lg border-2 border-orange-200 z-10">
     <div class="flex items-center gap-2">
       <span class="text-3xl md:text-4xl">🍕</span>
       <h1 class="text-xl md:text-3xl font-bold text-orange-600 tracking-wide">Little Chef Pizza!</h1>
     </div>
-    
-    <!-- Stage Navigation / Progress -->
+
     <div id="stage-indicator" class="flex gap-1 md:gap-2">
       <!-- Generated dynamically by JS -->
     </div>
 
-    <!-- Restart Button -->
     <button id="reset-btn" class="bg-red-500 hover:bg-red-600 active:scale-95 text-white text-sm md:text-base font-bold py-2 px-3 md:px-4 rounded-xl shadow-md transition-all flex items-center gap-1">
       🔄 <span>New</span>
     </button>
   </header>
 
-  <!-- Main Game Canvas Container -->
-  <main class="relative w-full max-w-2xl flex-1 my-2 flex items-center justify-center min-h-0">
-    <canvas id="pizzaCanvas" class="bg-transparent rounded-3xl cursor-pointer max-w-full max-h-full touch-none"></canvas>
+  <main class="relative w-full max-w-6xl flex-1 my-2 flex items-center justify-center gap-4 min-h-0">
+    <div class="pizza-shell">
+      <canvas id="pizzaCanvas" class="bg-transparent rounded-3xl cursor-pointer touch-none"></canvas>
+    </div>
 
-    <!-- Overlay Prompt / Instruction Badge -->
-    <div id="instruction-badge" class="absolute top-4 bg-white/90 backdrop-blur-sm border-2 border-orange-400 px-6 py-2 rounded-full shadow-lg text-orange-700 text-lg md:text-2xl font-bold animate-bounce pointer-events-none">
+    <aside class="w-[280px] h-[520px] rounded-3xl border-4 border-blue-400 bg-blue-200/80 shadow-lg p-3 flex-shrink-0">
+      <div id="controls-panel" class="w-full h-full">
+        <!-- Dynamic Controls based on game stage are rendered here -->
+      </div>
+    </aside>
+
+    <div id="instruction-badge" class="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm border-2 border-orange-400 px-6 py-2 rounded-full shadow-lg text-orange-700 text-lg md:text-2xl font-bold animate-bounce pointer-events-none">
       Tap to Roll Dough! 🪵
     </div>
 
-    <!-- Oven Controls Overlay (Hidden by default) -->
     <div id="oven-overlay" class="hidden absolute inset-0 bg-black/40 backdrop-blur-xs rounded-3xl flex flex-col items-center justify-center p-6 text-white text-center">
       <div class="text-6xl md:text-8xl mb-4 animate-pulse">🔥</div>
       <h2 class="text-2xl md:text-4xl font-bold mb-4 text-yellow-300">Baking Your Pizza!</h2>
@@ -85,15 +101,5 @@
       </div>
     </div>
   </main>
-
-  <!-- Action Controls / Tool Palette Container -->
-  <footer class="w-full max-w-4xl bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-lg border-2 border-orange-200 z-10 min-h-[110px] flex items-center justify-center">
-    <div id="controls-panel" class="w-full flex items-center justify-center gap-2 md:gap-4 overflow-x-auto py-1">
-      <!-- Dynamic Controls based on game stage are rendered here -->
-    </div>
-  </footer>
-
-  <!-- Sound Effects / Audio synth loader -->
-  <script src="game.js"></script>
 </body>
 </html>
