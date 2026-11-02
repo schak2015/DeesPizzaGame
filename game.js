@@ -33,6 +33,9 @@ const GAME_CONFIG = {
     { id: 'olive', name: 'Olives', emoji: '🫒', color: '#212121', radius: 12 },
     { id: 'pepper', name: 'Peppers', emoji: '🫑', color: '#4CAF50', radius: 16 },
     { id: 'pineapple', name: 'Pineapple', emoji: '🍍', color: '#FBC02D', radius: 16 },
+    { id: 'butter', name: 'Butter', emoji: '🧈', color: '#FDE68A', radius: 17 },
+    { id: 'apples', name: 'Apples', emoji: '🍏', color: '#4CAF50', radius: 17 },
+    { id: 'gummies', name: 'Gummies', emoji: '🍬', color: '#EC4899', radius: 18 },
     { id: 'star', name: 'Cheese Star', emoji: '⭐', color: '#FFD54F', radius: 18 }
   ],
   bakingDurationMs: 4000
