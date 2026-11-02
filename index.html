@@ -52,11 +52,11 @@
       width: 100%;
       max-width: 1180px;
       flex-wrap: nowrap;
-      gap: clamp(1rem, 2vw, 2rem);
+      gap: clamp(0.75rem, 1.2vw, 1.5rem);
       align-items: center;
     }
     aside {
-      width: clamp(220px, 22vw, 280px);
+      width: clamp(260px, 20vw, 300px);
       height: clamp(360px, 52vw, 520px);
       min-height: 320px;
       background: linear-gradient(180deg, rgba(191, 219, 254, 0.95), rgba(147, 197, 253, 0.9));
@@ -76,6 +76,26 @@
       height: 100%;
       padding: 0.2rem;
     }
+    #controls-panel.selection-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+      align-items: stretch;
+      justify-items: stretch;
+      overflow-y: auto;
+      padding-bottom: 0.25rem;
+    }
+    #controls-panel.selection-grid > * {
+      width: 100%;
+      min-width: 0;
+    }
+    #controls-panel.selection-grid .topping-btn {
+      padding-left: 0.4rem;
+      padding-right: 0.4rem;
+      font-size: 0.7rem;
+      line-height: 1.1;
+      white-space: normal;
+    }
     #instruction-badge {
       z-index: 20;
     }
@@ -86,6 +106,7 @@
       }
       .pizza-shell {
         margin-bottom: 0.5rem;
+        margin-left: 0;
       }
       aside {
         width: min(90vw, 420px);
@@ -95,6 +116,14 @@
       #pizzaCanvas {
         width: min(76vw, 420px);
         height: min(76vw, 420px);
+      }
+    }
+    @media (min-width: 1025px) {
+      body {
+        overflow-x: hidden;
+      }
+      .pizza-shell {
+        margin-left: -0.9rem;
       }
     }
   </style>

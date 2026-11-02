@@ -295,6 +295,7 @@ class PizzaGame {
 
     if (this.controlsPanelEl) {
       this.controlsPanelEl.innerHTML = '';
+      this.controlsPanelEl.classList.remove('selection-grid');
       this.controlsPanelEl.style.gap = '0.6rem';
       this.controlsPanelEl.style.justifyContent = 'center';
       this.controlsPanelEl.style.alignItems = 'center';
@@ -355,11 +356,18 @@ class PizzaGame {
           this.instructionBadgeEl.style.display = 'block';
         }
 
+        this.controlsPanelEl.classList.add('selection-grid');
+        this.controlsPanelEl.style.display = 'grid';
+        this.controlsPanelEl.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+        this.controlsPanelEl.style.alignItems = 'stretch';
+        this.controlsPanelEl.style.justifyItems = 'stretch';
+
         GAME_CONFIG.toppings.forEach((topping) => {
           const btn = document.createElement('button');
-          btn.className = `topping-btn px-3 py-2 bg-yellow-50 hover:bg-yellow-100 rounded-2xl border-2 border-yellow-300 text-yellow-900 font-bold flex items-center gap-1 ${this.selectedTopping.id === topping.id ? 'ring-4 ring-yellow-400 scale-105' : ''}`;
+          btn.className = `topping-btn px-2 py-2 bg-yellow-50 hover:bg-yellow-100 rounded-2xl border-2 border-yellow-300 text-yellow-900 font-bold flex items-center justify-center gap-1 ${this.selectedTopping.id === topping.id ? 'ring-4 ring-yellow-400 scale-105' : ''}`;
           btn.style.minHeight = '54px';
-          btn.innerHTML = `<span class="text-2xl">${topping.emoji}</span> <span>${topping.name}</span>`;
+          btn.style.width = '100%';
+          btn.innerHTML = `<span class="text-xl md:text-2xl">${topping.emoji}</span> <span class="text-xs md:text-sm">${topping.name}</span>`;
           btn.onclick = () => {
             this.selectedTopping = topping;
             this.playSound('pop');
@@ -367,7 +375,12 @@ class PizzaGame {
           };
           this.controlsPanelEl.appendChild(btn);
         });
-        this.appendNextButton();
+
+        const nextWrap = document.createElement('div');
+        nextWrap.className = 'col-span-2';
+        nextWrap.style.width = '100%';
+        nextWrap.appendChild(this.createNextButton());
+        this.controlsPanelEl.appendChild(nextWrap);
       } else if (currentStage === 'bake') {
         if (this.instructionBadgeEl) {
           this.instructionBadgeEl.textContent = 'Baking... 🍕🔥';
@@ -388,16 +401,20 @@ class PizzaGame {
     }
   }
 
-  appendNextButton() {
+  createNextButton() {
     const nextBtn = document.createElement('button');
-    nextBtn.className = 'ml-auto bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transform active:scale-95 text-lg flex items-center gap-2';
+    nextBtn.className = 'w-full bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transform active:scale-95 text-lg flex items-center justify-center gap-2';
     nextBtn.style.minHeight = '54px';
     nextBtn.innerHTML = '<span>Next</span> ➡️';
     nextBtn.onclick = () => {
       this.playSound('pop');
       this.nextStage();
     };
+    return nextBtn;
+  }
 
+  appendNextButton() {
+    const nextBtn = this.createNextButton();
     if (this.controlsPanelEl) {
       this.controlsPanelEl.appendChild(nextBtn);
     }
