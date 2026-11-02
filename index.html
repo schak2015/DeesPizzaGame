@@ -31,8 +31,8 @@
     }
     #pizzaCanvas {
       display: block;
-      width: min(88vw, 520px);
-      height: min(88vw, 520px);
+      width: clamp(260px, 40vw, 520px);
+      height: clamp(260px, 40vw, 520px);
       max-width: 520px;
       max-height: 520px;
       border-radius: 1.5rem;
@@ -44,6 +44,26 @@
       border-radius: 2rem;
       padding: 1rem;
       box-shadow: inset 0 0 0 4px rgba(255,255,255,0.3), 0 18px 25px rgba(96, 165, 250, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    main {
+      width: 100%;
+      max-width: 1180px;
+      flex-wrap: nowrap;
+      gap: clamp(1rem, 2vw, 2rem);
+      align-items: center;
+    }
+    aside {
+      width: clamp(220px, 22vw, 280px);
+      height: clamp(360px, 52vw, 520px);
+      min-height: 320px;
+      background: linear-gradient(180deg, rgba(191, 219, 254, 0.95), rgba(147, 197, 253, 0.9));
+      border: 4px solid #60a5fa;
+      border-radius: 2rem;
+      box-shadow: 0 18px 25px rgba(96, 165, 250, 0.18);
+      padding: 0.9rem;
     }
     #controls-panel {
       display: flex;
@@ -54,9 +74,28 @@
       overflow-y: auto;
       width: 100%;
       height: 100%;
+      padding: 0.2rem;
     }
     #instruction-badge {
       z-index: 20;
+    }
+    @media (max-width: 1024px) {
+      main {
+        flex-direction: column;
+        flex-wrap: wrap;
+      }
+      .pizza-shell {
+        margin-bottom: 0.5rem;
+      }
+      aside {
+        width: min(90vw, 420px);
+        height: auto;
+        min-height: 220px;
+      }
+      #pizzaCanvas {
+        width: min(76vw, 420px);
+        height: min(76vw, 420px);
+      }
     }
   </style>
 </head>
